@@ -61,3 +61,10 @@ class LLM:
         if self._tokenizer is not None:
             return len(self._tokenizer.encode(text))
         return max(1, len(text) // 4)
+
+
+if __name__ == "__main__":
+
+    llm = LLM()
+    generated_sentence = llm.generate([{'role': 'user', 'content': "¿Cuál es la capital de España?"}], max_new_tokens= 64)
+    print(generated_sentence)
