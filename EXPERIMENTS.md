@@ -148,6 +148,110 @@ configuraciones: **una tabla medida con dos comprobadores distintos no es una ta
 
 ---
 
+### 2026-11-20 · Fase P2 · Banco numérico de los 90, al lado de la fase 1 de ARCA
+
+**Qué queríamos saber.** Lo que el smoke de 8 problemas no puede contestar: sobre los 90
+problemas del split de test, ¿cuánto acierta cada arquitectura, con cada cerebro, y cuánto de
+eso es mérito de las herramientas? La comparación que importa es contra la fase 1 de ARCA,
+que son **estos mismos 90 problemas** resueltos por un 1.7B afinado que hacía las cuentas en
+el prompt, sin herramientas.
+
+**Qué hicimos.** `eval/numeric_bench.py`: los 90 de `data/rlm_data_test.jsonl`, cada uno por
+su especialista y por el monolítico (180 corridas por configuración), `max_steps=8`, el
+routing fijado por el tipo. Tres configuraciones, lanzadas con `nohup` en dos cadenas
+paralelas (`eval/run_bench_local.sh` en la GPU local y `eval/run_bench_endpoint.sh` contra el
+servicio central, que son recursos distintos; dentro de cada cadena, en serie). JSON en
+`reports/numeric_{hf_t0,ep_t0,ep_t1}.json` y figura en `reports/numeric_bench.png`.
+
+**Qué pasó.** Aciertos por tipo, con los denominadores a la vista:
+
+| configuración | coste total | cuota | ratio | TAE | **TOTAL** |
+|---|---|---|---|---|---|
+| ARCA fase 1 · base (sin tools) | 4/19 | 0/23 | 0/27 | 0/21 | **4/90** |
+| ARCA fase 1 · SFT (sin tools) | 13/19 | 0/23 | 0/27 | 0/21 | **13/90** |
+| ARCA fase 1 · GRPO (sin tools) | 16/19 | 0/23 | 7/27 | 0/21 | **23/90** |
+| 1.7B think=0 · especialistas | 19/19 | 23/23 | 27/27 | 21/21 | **90/90** |
+| 1.7B think=0 · monolítico | 19/19 | **22/23** | 27/27 | 21/21 | **89/90** |
+| 27B think=0 · especialistas | 19/19 | 23/23 | 27/27 | 21/21 | **90/90** |
+| 27B think=0 · monolítico | 19/19 | 23/23 | 27/27 | 21/21 | **90/90** |
+| 27B think=1 · especialistas | 19/19 | 23/23 | 27/27 | 21/21 | **90/90** |
+| 27B think=1 · monolítico | 19/19 | 23/23 | 27/27 | 21/21 | **90/90** |
+
+Coste y comportamiento (media por problema, 180 corridas por configuración):
+
+| configuración | arquitectura | pasos | tokens | latencia (s) | no_tool |
+|---|---|---|---|---|---|
+| 1.7B think=0 | especialistas | 2.00 | 4081 | 6.4 | 0.000 |
+| 1.7B think=0 | monolítico | 2.02 | 3826 | 11.7 | 0.000 |
+| 27B think=0 | especialistas | 2.00 | 6519 | 2.0 | 0.000 |
+| 27B think=0 | monolítico | 2.00 | 5323 | 2.5 | 0.000 |
+| 27B think=1 | especialistas | 2.00 | 6800 | 4.3 | 0.000 |
+| 27B think=1 | monolítico | 2.00 | 5658 | 5.1 | 0.000 |
+
+**Qué concluimos.**
+
+1. **El salto es de las herramientas, no del razonamiento.** De 23/90 (lo mejor de la fase 1,
+   después de SFT y GRPO) a 90/90, y con el modelo *pequeño*: el 1.7B con tools acierta los 90.
+   Los dos tipos que en la fase 1 daban **0/23 (cuota) y 0/21 (TAE) con los tres modelos** —
+   los que llevan exponenciales y, en la TAE, una bisección — pasan a 23/23 y 21/21. No es
+   que el modelo haya aprendido a calcular: es que ya no calcula. Elige la tool y pasa los
+   argumentos, y la aritmética la hace una función de Python verificada contra los 600
+   problemas del dataset. Ésta es la figura que justifica la fase 2 entera del proyecto.
+2. **El fallo de "no emite tool call" ha desaparecido.** `no_tool = 0.000` en las 540
+   corridas de las tres configuraciones. En la fase 2 de ARCA, 13 de 13 fallos eran ése. Lo
+   que lo arregla es el diseño de tools (una por métrica, argumentos obligatorios) más el
+   transporte nativo del endpoint; no hay ni una respuesta en prosa sin acción.
+3. **Este banco no sirve para decidir la ablación A, y hay que decirlo.** Con el 27B las dos
+   arquitecturas aciertan 90/90: hay techo. Con el 1.7B la diferencia es **90/90 frente a
+   89/90**, o sea **un problema**, que con n=90 no es significativo de nada (test exacto de
+   Fisher de 90/90 contra 89/90: p = 1.00). Lo honesto es decir que las dos
+   arquitecturas empatan en preguntas de un solo tipo, que es justo lo que este banco mide.
+   La ablación A se decidirá con las preguntas compuestas y las de routing (bancos 2 y 3 de la
+   sección 2 del plan), donde el monolítico no tiene con qué: una sola tool no sabe de leyes,
+   y no hay a quién descomponer la pregunta.
+4. **Lo que sí separa a las dos arquitecturas es el coste, y va a favor del monolítico.**
+   3826 tokens por problema frente a 4081 en el 1.7B (5323 vs 6519 en el 27B), porque su
+   prompt de sistema lleva 2 tools en vez de 4. Si el multiagente se justifica, no será por
+   tokens en preguntas simples. (La latencia del monolítico sale peor —11.7 s vs 6.4 s— pero
+   eso es ruido de la GPU compartida, no una propiedad de la arquitectura: el 27B, que no
+   comparte GPU con nosotros, da 2.5 vs 2.0 s.)
+5. **El *thinking* sigue sin comprar nada.** En el 27B, mismo 90/90 por ~300 tokens más y el
+   doble de latencia. Se queda apagado por defecto.
+
+**El único fallo de las 540 corridas, con su traza.** `cuota_00106`, monolítico, 1.7B:
+
+```
+paso 1  loan_metrics(principal=17050.72, annual_rate_pct=9.26, months=36,
+                     upfront_fee=254.37, monthly_income=1925.45, other_monthly_debts=351.43)
+        -> {"monthly_payment": 544.27, "total_cost": 2797.37,
+            "apr_pct": 10.79, "debt_ratio_pct": 46.52}
+paso 2  final_answer(answer="124.32")          <- esperado 544.27
+```
+
+La tool acertó, los argumentos eran correctos y el modelo contestó **124.32**, que no es
+ninguno de los cuatro campos de la observación ni ninguno de los argumentos: es un número
+inventado. Es exactamente el mecanismo de los fallos del smoke del 19-11. **El mismo problema
+por el especialista salió bien**, y la diferencia entre las dos observaciones se ve a simple
+vista:
+
+```
+especialista:  {"result": 544.27, "inputs": {...}}          <- un número, y se llama "result"
+monolítico:    {"monthly_payment": 544.27, "total_cost": ...,
+                "apr_pct": ..., "debt_ratio_pct": ...}      <- cuatro, y hay que elegir campo
+```
+
+Con n=1 esto es una anécdota, no una medida, y como tal hay que contarlo. Pero es una
+anécdota que apunta en la misma dirección que el diseño: **una observación con un solo número
+no se puede leer mal**. Merece medirse a propósito (sería una variante de la ablación F:
+`loan_metrics` con cuatro campos frente a una tool por métrica), no darlo por demostrado aquí.
+
+Nota para el crítico determinista: este fallo **sí** lo cazaría la regla "el número final
+tiene que aparecer en la observación", porque 124.32 no aparece en ningún sitio. Los dos
+fallos de TAE del smoke **no**, porque el tipo nominal sí aparece, dentro de `"inputs"`. Las
+dos cosas juntas dicen que la regla correcta es comparar contra `"result"`.
+
+---
+
 ## Propuestas pendientes de medir
 
 ### Regla de `RULES` para "contesta con un número de `inputs` o inventado en vez de con `result`"
