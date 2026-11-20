@@ -1,0 +1,696 @@
+{
+  "summary": {
+    "specialists": {
+      "n": 8,
+      "accuracy": 1.0,
+      "mean_steps": 2.0,
+      "mean_tokens": 6815.375,
+      "mean_latency_s": 4.31375,
+      "no_tool_call": 0.0
+    },
+    "monolithic": {
+      "n": 8,
+      "accuracy": 1.0,
+      "mean_steps": 2.0,
+      "mean_tokens": 5628.375,
+      "mean_latency_s": 4.855,
+      "no_tool_call": 0.0
+    }
+  },
+  "by_type": {
+    "cuota": {
+      "specialists": {
+        "n": 2,
+        "accuracy": 1.0,
+        "mean_steps": 2.0,
+        "mean_tokens": 7646.5,
+        "mean_latency_s": 4.855,
+        "no_tool_call": 0.0
+      },
+      "monolithic": {
+        "n": 2,
+        "accuracy": 1.0,
+        "mean_steps": 2.0,
+        "mean_tokens": 5559.0,
+        "mean_latency_s": 4.785,
+        "no_tool_call": 0.0
+      }
+    },
+    "tae": {
+      "specialists": {
+        "n": 2,
+        "accuracy": 1.0,
+        "mean_steps": 2.0,
+        "mean_tokens": 7637.5,
+        "mean_latency_s": 3.79,
+        "no_tool_call": 0.0
+      },
+      "monolithic": {
+        "n": 2,
+        "accuracy": 1.0,
+        "mean_steps": 2.0,
+        "mean_tokens": 5631.5,
+        "mean_latency_s": 4.8,
+        "no_tool_call": 0.0
+      }
+    },
+    "coste_total": {
+      "specialists": {
+        "n": 2,
+        "accuracy": 1.0,
+        "mean_steps": 2.0,
+        "mean_tokens": 5902.5,
+        "mean_latency_s": 3.635,
+        "no_tool_call": 0.0
+      },
+      "monolithic": {
+        "n": 2,
+        "accuracy": 1.0,
+        "mean_steps": 2.0,
+        "mean_tokens": 5586.5,
+        "mean_latency_s": 4.135,
+        "no_tool_call": 0.0
+      }
+    },
+    "ratio_endeudamiento": {
+      "specialists": {
+        "n": 2,
+        "accuracy": 1.0,
+        "mean_steps": 2.0,
+        "mean_tokens": 6075.0,
+        "mean_latency_s": 4.975,
+        "no_tool_call": 0.0
+      },
+      "monolithic": {
+        "n": 2,
+        "accuracy": 1.0,
+        "mean_steps": 2.0,
+        "mean_tokens": 5736.5,
+        "mean_latency_s": 5.7,
+        "no_tool_call": 0.0
+      }
+    }
+  },
+  "rows": [
+    {
+      "id": "cuota_00071",
+      "tipo": "cuota",
+      "agent": "cuota_tae",
+      "expected": "174.09",
+      "answer": "La cuota mensual del préstamo de 3.708,23 € a 24 meses con un tipo nominal anual del 11,73% (amortización francesa) es de 174,09 € al mes.\n\nComplemento: sumando la cuota (174,09 €) y las otras deudas (12,21 €), la carga mensual total sería de 186,30 €, es decir, el 12,28 % de los ingresos netos mensuales de 1.517,30 € — dentro de la ratio habitual de solvencia. La comisión de apertura de 16,66 € no altera la cuota mensual, aunque sí elevaría el TAE (coste real) del préstamo.",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 7784,
+      "tools": [
+        "calculate_monthly_payment",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "calculate_monthly_payment",
+          "arguments": {
+            "principal": 3708.23,
+            "annual_rate_pct": 11.73,
+            "months": 24
+          },
+          "observation": "{\"result\": 174.09, \"inputs\": {\"principal\": 3708.23, \"annual_rate_pct\": 11.73, \"months\": 24}}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "La cuota mensual del préstamo de 3.708,23 € a 24 meses con un tipo nominal anual del 11,73% (amortización francesa) es de 174,09 € al mes.\n\nComplemento: sumando la cuota (174,09 €) y las otras deudas (12,21 €), la carga mensual total sería de 186,30 €, es decir, el 12,28 % de los ingresos netos mensuales de 1.517,30 € — dentro de la ratio habitual de solvencia. La comisión de apertura de 16,66 € no altera la cuota mensual, aunque sí elevaría el TAE (coste real) del préstamo."
+          },
+          "observation": "La cuota mensual del préstamo de 3.708,23 € a 24 meses con un tipo nominal anual del 11,73% (amortización francesa) es de 174,09 € al mes.\n\nComplemento: sumando la cuota (174,09 €) y las otras deudas (12,21 €), la carga mensual total sería de 186,30 €, es decir, el 12,28 % de los ingresos netos mens"
+        }
+      ],
+      "latency_s": 6.47,
+      "error": null
+    },
+    {
+      "id": "cuota_00071",
+      "tipo": "cuota",
+      "agent": "monolithic",
+      "expected": "174.09",
+      "answer": "La cuota mensual del préstamo, mediante el sistema de amortización francés, es de 174,09 euros.",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 5512,
+      "tools": [
+        "loan_metrics",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "loan_metrics",
+          "arguments": {
+            "principal": 3708.23,
+            "annual_rate_pct": 11.73,
+            "months": 24,
+            "upfront_fee": 16.66,
+            "monthly_income": 1517.3,
+            "other_monthly_debts": 12.21
+          },
+          "observation": "{\"monthly_payment\": 174.09, \"total_cost\": 486.59, \"apr_pct\": 12.89, \"debt_ratio_pct\": 12.28}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "La cuota mensual del préstamo, mediante el sistema de amortización francés, es de 174,09 euros."
+          },
+          "observation": "La cuota mensual del préstamo, mediante el sistema de amortización francés, es de 174,09 euros."
+        }
+      ],
+      "latency_s": 4.38,
+      "error": null
+    },
+    {
+      "id": "cuota_00134",
+      "tipo": "cuota",
+      "agent": "cuota_tae",
+      "expected": "621.68",
+      "answer": "La cuota mensual del préstamo de 12.831,73 € a 24 meses con un tipo nominal anual del 14,92%, según el sistema de amortización francés, es de 621,68 €.",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 7509,
+      "tools": [
+        "calculate_monthly_payment",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "calculate_monthly_payment",
+          "arguments": {
+            "principal": 12831.73,
+            "annual_rate_pct": 14.92,
+            "months": 24
+          },
+          "observation": "{\"result\": 621.68, \"inputs\": {\"principal\": 12831.73, \"annual_rate_pct\": 14.92, \"months\": 24}}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "La cuota mensual del préstamo de 12.831,73 € a 24 meses con un tipo nominal anual del 14,92%, según el sistema de amortización francés, es de 621,68 €."
+          },
+          "observation": "La cuota mensual del préstamo de 12.831,73 € a 24 meses con un tipo nominal anual del 14,92%, según el sistema de amortización francés, es de 621,68 €."
+        }
+      ],
+      "latency_s": 3.24,
+      "error": null
+    },
+    {
+      "id": "cuota_00134",
+      "tipo": "cuota",
+      "agent": "monolithic",
+      "expected": "621.68",
+      "answer": "La cuota mensual del préstamo (amortización francesa) es de 621,68 euros. Datos del préstamo: principal 12.831,73 €, 24 meses, TIN 14,92%, comisión de apertura 234,29 €. Datos adicionales: coste total 2.322,88 €, TAE 18,16% y ratio de deuda 29,20% de los ingresos netos mensuales (con otras deudas de 58,73 €/mes).",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 5606,
+      "tools": [
+        "loan_metrics",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "loan_metrics",
+          "arguments": {
+            "principal": 12831.73,
+            "annual_rate_pct": 14.92,
+            "months": 24,
+            "upfront_fee": 234.29,
+            "monthly_income": 2330.49,
+            "other_monthly_debts": 58.73
+          },
+          "observation": "{\"monthly_payment\": 621.68, \"total_cost\": 2322.88, \"apr_pct\": 18.16, \"debt_ratio_pct\": 29.2}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "La cuota mensual del préstamo (amortización francesa) es de 621,68 euros. Datos del préstamo: principal 12.831,73 €, 24 meses, TIN 14,92%, comisión de apertura 234,29 €. Datos adicionales: coste total 2.322,88 €, TAE 18,16% y ratio de deuda 29,20% de los ingresos netos mensuales (con otras deudas de 58,73 €/mes)."
+          },
+          "observation": "La cuota mensual del préstamo (amortización francesa) es de 621,68 euros. Datos del préstamo: principal 12.831,73 €, 24 meses, TIN 14,92%, comisión de apertura 234,29 €. Datos adicionales: coste total 2.322,88 €, TAE 18,16% y ratio de deuda 29,20% de los ingresos netos mensuales (con otras deudas de"
+        }
+      ],
+      "latency_s": 5.19,
+      "error": null
+    },
+    {
+      "id": "tae_00047",
+      "tipo": "tae",
+      "agent": "cuota_tae",
+      "expected": "7.48",
+      "answer": "La Tasa Anual Equivalente (TAE) del préstamo es del 7,48 % (principal 10.326,53 €, tipo nominal 6,80 % anual, 36 meses, cuota de 317,91 € y comisión de apertura de 65,86 €).",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 7642,
+      "tools": [
+        "calculate_apr",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "calculate_apr",
+          "arguments": {
+            "principal": 10326.53,
+            "annual_rate_pct": 6.8,
+            "months": 36,
+            "upfront_fee": 65.86
+          },
+          "observation": "{\"result\": 7.48, \"inputs\": {\"principal\": 10326.53, \"annual_rate_pct\": 6.8, \"months\": 36, \"upfront_fee\": 65.86, \"monthly_payment\": 317.91}}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "La Tasa Anual Equivalente (TAE) del préstamo es del 7,48 % (principal 10.326,53 €, tipo nominal 6,80 % anual, 36 meses, cuota de 317,91 € y comisión de apertura de 65,86 €)."
+          },
+          "observation": "La Tasa Anual Equivalente (TAE) del préstamo es del 7,48 % (principal 10.326,53 €, tipo nominal 6,80 % anual, 36 meses, cuota de 317,91 € y comisión de apertura de 65,86 €)."
+        }
+      ],
+      "latency_s": 3.86,
+      "error": null
+    },
+    {
+      "id": "tae_00047",
+      "tipo": "tae",
+      "agent": "monolithic",
+      "expected": "7.48",
+      "answer": "La TAE del préstamo es del 7,48 %.",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 5507,
+      "tools": [
+        "loan_metrics",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "loan_metrics",
+          "arguments": {
+            "principal": 10326.53,
+            "annual_rate_pct": 6.8,
+            "months": 36,
+            "upfront_fee": 65.86,
+            "monthly_income": 1578.96,
+            "other_monthly_debts": 447.88,
+            "monthly_payment": 317.91
+          },
+          "observation": "{\"monthly_payment\": 317.91, \"total_cost\": 1184.09, \"apr_pct\": 7.48, \"debt_ratio_pct\": 48.5}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "La TAE del préstamo es del 7,48 %."
+          },
+          "observation": "La TAE del préstamo es del 7,48 %."
+        }
+      ],
+      "latency_s": 3.48,
+      "error": null
+    },
+    {
+      "id": "tae_00063",
+      "tipo": "tae",
+      "agent": "cuota_tae",
+      "expected": "8.18",
+      "answer": "La TAE del préstamo es del 8,18% (préstamo de 11.057,49 € a 36 meses, tipo nominal anual del 6,68% y comisión de apertura de 195,79 €).",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 7633,
+      "tools": [
+        "calculate_apr",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "calculate_apr",
+          "arguments": {
+            "principal": 11057.49,
+            "annual_rate_pct": 6.68,
+            "months": 36,
+            "upfront_fee": 195.79
+          },
+          "observation": "{\"result\": 8.18, \"inputs\": {\"principal\": 11057.49, \"annual_rate_pct\": 6.68, \"months\": 36, \"upfront_fee\": 195.79, \"monthly_payment\": 339.81}}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "La TAE del préstamo es del 8,18% (préstamo de 11.057,49 € a 36 meses, tipo nominal anual del 6,68% y comisión de apertura de 195,79 €)."
+          },
+          "observation": "La TAE del préstamo es del 8,18% (préstamo de 11.057,49 € a 36 meses, tipo nominal anual del 6,68% y comisión de apertura de 195,79 €)."
+        }
+      ],
+      "latency_s": 3.72,
+      "error": null
+    },
+    {
+      "id": "tae_00063",
+      "tipo": "tae",
+      "agent": "monolithic",
+      "expected": "8.18",
+      "answer": "La TAE (Tasa Anual Equivalente) de este préstamo es del 8,18 %.\n\nDatos del préstamo:\n- Principal: 11.057,49 €\n- Plazo: 36 meses\n- TIN (tipo nominal anual): 6,68 %\n- Comisión de apertura: 195,79 €\n- Cuota mensual: 339,81 €\n- Coste total del crédito (intereses + comisiones): 1.371,46 €\n- TAE: 8,18 %",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 5756,
+      "tools": [
+        "loan_metrics",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "loan_metrics",
+          "arguments": {
+            "principal": 11057.49,
+            "annual_rate_pct": 6.68,
+            "months": 36,
+            "upfront_fee": 195.79,
+            "monthly_payment": 339.81,
+            "monthly_income": 1175.05,
+            "other_monthly_debts": 354.48
+          },
+          "observation": "{\"monthly_payment\": 339.81, \"total_cost\": 1371.46, \"apr_pct\": 8.18, \"debt_ratio_pct\": 59.09}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "La TAE (Tasa Anual Equivalente) de este préstamo es del 8,18 %.\n\nDatos del préstamo:\n- Principal: 11.057,49 €\n- Plazo: 36 meses\n- TIN (tipo nominal anual): 6,68 %\n- Comisión de apertura: 195,79 €\n- Cuota mensual: 339,81 €\n- Coste total del crédito (intereses + comisiones): 1.371,46 €\n- TAE: 8,18 %"
+          },
+          "observation": "La TAE (Tasa Anual Equivalente) de este préstamo es del 8,18 %.\n\nDatos del préstamo:\n- Principal: 11.057,49 €\n- Plazo: 36 meses\n- TIN (tipo nominal anual): 6,68 %\n- Comisión de apertura: 195,79 €\n- Cuota mensual: 339,81 €\n- Coste total del crédito (intereses + comisiones): 1.371,46 €\n- TAE: 8,18 %"
+        }
+      ],
+      "latency_s": 6.12,
+      "error": null
+    },
+    {
+      "id": "coste_total_00148",
+      "tipo": "coste_total",
+      "agent": "coste_ratio",
+      "expected": "3930.84",
+      "answer": "El coste total del crédito es de 3.930,84 euros (16.848,00 € en cuotas + 22,43 € de comisión de apertura − 12.939,59 € de capital recibido).",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 5909,
+      "tools": [
+        "calculate_total_cost",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "calculate_total_cost",
+          "arguments": {
+            "principal": 12939.59,
+            "annual_rate_pct": 13.6,
+            "months": 48,
+            "upfront_fee": 22.43,
+            "monthly_payment": 351
+          },
+          "observation": "{\"result\": 3930.84, \"inputs\": {\"principal\": 12939.59, \"annual_rate_pct\": 13.6, \"months\": 48, \"upfront_fee\": 22.43, \"monthly_payment\": 351.0}}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "El coste total del crédito es de 3.930,84 euros (16.848,00 € en cuotas + 22,43 € de comisión de apertura − 12.939,59 € de capital recibido)."
+          },
+          "observation": "El coste total del crédito es de 3.930,84 euros (16.848,00 € en cuotas + 22,43 € de comisión de apertura − 12.939,59 € de capital recibido)."
+        }
+      ],
+      "latency_s": 3.86,
+      "error": null
+    },
+    {
+      "id": "coste_total_00148",
+      "tipo": "coste_total",
+      "agent": "monolithic",
+      "expected": "3930.84",
+      "answer": "El coste total del crédito es de 3.930,84 euros (lo que incluye los intereses más la comisión de apertura: todo lo pagado menos el capital recibido).",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 5538,
+      "tools": [
+        "loan_metrics",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "loan_metrics",
+          "arguments": {
+            "principal": 12939.59,
+            "annual_rate_pct": 13.6,
+            "months": 48,
+            "upfront_fee": 22.43,
+            "monthly_payment": 351,
+            "monthly_income": 1211.44,
+            "other_monthly_debts": 376.22
+          },
+          "observation": "{\"monthly_payment\": 351.0, \"total_cost\": 3930.84, \"apr_pct\": 14.59, \"debt_ratio_pct\": 60.03}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "El coste total del crédito es de 3.930,84 euros (lo que incluye los intereses más la comisión de apertura: todo lo pagado menos el capital recibido)."
+          },
+          "observation": "El coste total del crédito es de 3.930,84 euros (lo que incluye los intereses más la comisión de apertura: todo lo pagado menos el capital recibido)."
+        }
+      ],
+      "latency_s": 3.68,
+      "error": null
+    },
+    {
+      "id": "coste_total_00073",
+      "tipo": "coste_total",
+      "agent": "coste_ratio",
+      "expected": "2803.54",
+      "answer": "El coste total del crédito es de 2803.54 euros (2633.89 €/mes × 12 meses + 539.41 € de comisión de apertura − 29342.55 € de capital recibido).",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 5896,
+      "tools": [
+        "calculate_total_cost",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "calculate_total_cost",
+          "arguments": {
+            "principal": 29342.55,
+            "annual_rate_pct": 13.95,
+            "months": 12,
+            "upfront_fee": 539.41,
+            "monthly_payment": 2633.89
+          },
+          "observation": "{\"result\": 2803.54, \"inputs\": {\"principal\": 29342.55, \"annual_rate_pct\": 13.95, \"months\": 12, \"upfront_fee\": 539.41, \"monthly_payment\": 2633.89}}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "El coste total del crédito es de 2803.54 euros (2633.89 €/mes × 12 meses + 539.41 € de comisión de apertura − 29342.55 € de capital recibido)."
+          },
+          "observation": "El coste total del crédito es de 2803.54 euros (2633.89 €/mes × 12 meses + 539.41 € de comisión de apertura − 29342.55 € de capital recibido)."
+        }
+      ],
+      "latency_s": 3.41,
+      "error": null
+    },
+    {
+      "id": "coste_total_00073",
+      "tipo": "coste_total",
+      "agent": "monolithic",
+      "expected": "2803.54",
+      "answer": "El coste total del crédito es de 2 803,54 euros.",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 5635,
+      "tools": [
+        "loan_metrics",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "loan_metrics",
+          "arguments": {
+            "principal": 29342.55,
+            "annual_rate_pct": 13.95,
+            "months": 12,
+            "upfront_fee": 539.41,
+            "monthly_payment": 2633.89,
+            "monthly_income": 1612.28,
+            "other_monthly_debts": 450.64
+          },
+          "observation": "{\"monthly_payment\": 2633.89, \"total_cost\": 2803.54, \"apr_pct\": 18.98, \"debt_ratio_pct\": 191.31}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "El coste total del crédito es de 2 803,54 euros."
+          },
+          "observation": "El coste total del crédito es de 2 803,54 euros."
+        }
+      ],
+      "latency_s": 4.59,
+      "error": null
+    },
+    {
+      "id": "ratio_endeudamiento_00086",
+      "tipo": "ratio_endeudamiento",
+      "agent": "coste_ratio",
+      "expected": "45.88",
+      "answer": "El ratio de endeudamiento resultante es del 45,88 %: la cuota del préstamo (1.299,67 €) más las otras deudas mensuales (408,35 €) suponen 1.708,02 € al mes, es decir, el 45,88 % de los ingresos netos de 3.722,57 € al mes.",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 6097,
+      "tools": [
+        "calculate_debt_ratio",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "calculate_debt_ratio",
+          "arguments": {
+            "monthly_income": 3722.57,
+            "principal": 27253.88,
+            "annual_rate_pct": 13.31,
+            "months": 24,
+            "other_monthly_debts": 408.35,
+            "monthly_payment": 1299.67
+          },
+          "observation": "{\"result\": 45.88, \"inputs\": {\"monthly_income\": 3722.57, \"principal\": 27253.88, \"annual_rate_pct\": 13.31, \"months\": 24, \"other_monthly_debts\": 408.35, \"monthly_payment\": 1299.67}}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "El ratio de endeudamiento resultante es del 45,88 %: la cuota del préstamo (1.299,67 €) más las otras deudas mensuales (408,35 €) suponen 1.708,02 € al mes, es decir, el 45,88 % de los ingresos netos de 3.722,57 € al mes."
+          },
+          "observation": "El ratio de endeudamiento resultante es del 45,88 %: la cuota del préstamo (1.299,67 €) más las otras deudas mensuales (408,35 €) suponen 1.708,02 € al mes, es decir, el 45,88 % de los ingresos netos de 3.722,57 € al mes."
+        }
+      ],
+      "latency_s": 5.17,
+      "error": null
+    },
+    {
+      "id": "ratio_endeudamiento_00086",
+      "tipo": "ratio_endeudamiento",
+      "agent": "monolithic",
+      "expected": "45.88",
+      "answer": "El ratio de endeudamiento resultante es del 45,88 %. Se calcula sumando la cuota del préstamo (1.299,67 €) y las otras deudas mensuales (408,35 €), es decir 1.708,02 € de cargas mensuales, sobre los ingresos netos de 3.722,57 €.",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 5762,
+      "tools": [
+        "loan_metrics",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "loan_metrics",
+          "arguments": {
+            "principal": 27253.88,
+            "annual_rate_pct": 13.31,
+            "months": 24,
+            "upfront_fee": 49.99,
+            "monthly_income": 3722.57,
+            "other_monthly_debts": 408.35,
+            "monthly_payment": 1299.67
+          },
+          "observation": "{\"monthly_payment\": 1299.67, \"total_cost\": 3988.19, \"apr_pct\": 14.36, \"debt_ratio_pct\": 45.88}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "El ratio de endeudamiento resultante es del 45,88 %. Se calcula sumando la cuota del préstamo (1.299,67 €) y las otras deudas mensuales (408,35 €), es decir 1.708,02 € de cargas mensuales, sobre los ingresos netos de 3.722,57 €."
+          },
+          "observation": "El ratio de endeudamiento resultante es del 45,88 %. Se calcula sumando la cuota del préstamo (1.299,67 €) y las otras deudas mensuales (408,35 €), es decir 1.708,02 € de cargas mensuales, sobre los ingresos netos de 3.722,57 €."
+        }
+      ],
+      "latency_s": 5.95,
+      "error": null
+    },
+    {
+      "id": "ratio_endeudamiento_00037",
+      "tipo": "ratio_endeudamiento",
+      "agent": "coste_ratio",
+      "expected": "22.78",
+      "answer": "El ratio de endeudamiento resultante es del 22,78%. Se calcula sumando la cuota mensual del préstamo (269,43 €) y las otras deudas mensuales (156,26 €), lo que da 425,69 € de pagos de deuda al mes, frente a unos ingresos netos de 1.868,90 €. (425,69 / 1.868,90) × 100 = 22,78 %.",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 6053,
+      "tools": [
+        "calculate_debt_ratio",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "calculate_debt_ratio",
+          "arguments": {
+            "monthly_income": 1868.9,
+            "principal": 10829.02,
+            "annual_rate_pct": 8.99,
+            "months": 48,
+            "other_monthly_debts": 156.26,
+            "monthly_payment": 269.43
+          },
+          "observation": "{\"result\": 22.78, \"inputs\": {\"monthly_income\": 1868.9, \"principal\": 10829.02, \"annual_rate_pct\": 8.99, \"months\": 48, \"other_monthly_debts\": 156.26, \"monthly_payment\": 269.43}}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "El ratio de endeudamiento resultante es del 22,78%. Se calcula sumando la cuota mensual del préstamo (269,43 €) y las otras deudas mensuales (156,26 €), lo que da 425,69 € de pagos de deuda al mes, frente a unos ingresos netos de 1.868,90 €. (425,69 / 1.868,90) × 100 = 22,78 %."
+          },
+          "observation": "El ratio de endeudamiento resultante es del 22,78%. Se calcula sumando la cuota mensual del préstamo (269,43 €) y las otras deudas mensuales (156,26 €), lo que da 425,69 € de pagos de deuda al mes, frente a unos ingresos netos de 1.868,90 €. (425,69 / 1.868,90) × 100 = 22,78 %."
+        }
+      ],
+      "latency_s": 4.78,
+      "error": null
+    },
+    {
+      "id": "ratio_endeudamiento_00037",
+      "tipo": "ratio_endeudamiento",
+      "agent": "monolithic",
+      "expected": "22.78",
+      "answer": "El ratio de endeudamiento resultante es del 22,78 % (cuota de 269,43 € + otras deudas de 156,26 € = 425,69 € sobre ingresos netos de 1.868,90 €/mes).",
+      "correct": true,
+      "n_steps": 2,
+      "tokens": 5711,
+      "tools": [
+        "loan_metrics",
+        "final_answer"
+      ],
+      "trace": [
+        {
+          "tool": "loan_metrics",
+          "arguments": {
+            "principal": 10829.02,
+            "annual_rate_pct": 8.99,
+            "months": 48,
+            "upfront_fee": 158.02,
+            "monthly_payment": 269.43,
+            "monthly_income": 1868.9,
+            "other_monthly_debts": 156.26
+          },
+          "observation": "{\"monthly_payment\": 269.43, \"total_cost\": 2261.64, \"apr_pct\": 10.21, \"debt_ratio_pct\": 22.78}"
+        },
+        {
+          "tool": "final_answer",
+          "arguments": {
+            "answer": "El ratio de endeudamiento resultante es del 22,78 % (cuota de 269,43 € + otras deudas de 156,26 € = 425,69 € sobre ingresos netos de 1.868,90 €/mes)."
+          },
+          "observation": "El ratio de endeudamiento resultante es del 22,78 % (cuota de 269,43 € + otras deudas de 156,26 € = 425,69 € sobre ingresos netos de 1.868,90 €/mes)."
+        }
+      ],
+      "latency_s": 5.45,
+      "error": null
+    }
+  ],
+  "config": {
+    "backend": "EndpointLLM",
+    "model": "qwen3.8-27b-fp8",
+    "enable_thinking": true,
+    "max_steps": 8,
+    "per_type": 2,
+    "dataset": "/home/202212124/dgm/dgm-final-project/data/rlm_data_test.jsonl"
+  },
+  "total_usage": {
+    "prompt_tokens": 93020,
+    "completion_tokens": 6530,
+    "total_tokens": 99550,
+    "calls": 32
+  }
+}

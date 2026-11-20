@@ -1,0 +1,3 @@
+# Los logs crudos de cada corrida: utiles en la DGX, no en el repo.
+# El JSON de reports/ (con la traza de cada paso) es el artefacto que se versiona.
+*.log
