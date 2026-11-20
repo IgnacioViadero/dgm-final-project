@@ -139,3 +139,40 @@ def test_tool_timeout_is_an_observation(fake_llm):
 def test_model_name_includes_agent_and_model(fake_llm):
     llm = fake_llm([call("final_answer", answer="ok")])
     assert make_agent(llm).run("x").model == "test:fake"
+
+class UsageLLM:
+    """A brain that reports real token usage, like EndpointLLM and the local backend do."""
+
+    model_id = "usage-fake"
+
+    def __init__(self, replies, per_call_tokens=100):
+        self.replies = list(replies)
+        self.per_call_tokens = per_call_tokens
+        self.last_usage = None
+
+    def generate(self, messages, max_new_tokens=None, tools=None) -> str:
+        self.last_usage = {
+            "prompt_tokens": self.per_call_tokens - 10,
+            "completion_tokens": 10,
+            "total_tokens": self.per_call_tokens,
+            "estimated": False,
+        }
+        return self.replies.pop(0)
+
+    def count_tokens(self, text: str) -> int:
+        # Only the memory budget uses this; the run must not charge tokens with it.
+        return max(1, len(text) // 4)
+
+
+def test_real_usage_is_charged_instead_of_the_estimate():
+    llm = UsageLLM([call("add", a=2, b=3), call("final_answer", answer="5")], per_call_tokens=100)
+    response = make_agent(llm).run("2 + 3")
+    assert response.succeeded
+    assert response.tokens_used == 200  # two generations of 100 tokens each, not an estimate
+
+
+def test_estimate_is_used_when_the_brain_reports_no_usage(fake_llm):
+    """FakeLLM has no last_usage: the loop must fall back to count_tokens."""
+    llm = fake_llm([call("add", a=2, b=3), call("final_answer", answer="5")])
+    assert not hasattr(llm, "last_usage")
+    assert make_agent(llm).run("2 + 3").tokens_used > 0

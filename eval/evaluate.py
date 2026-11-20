@@ -1,10 +1,10 @@
 """Phase 4 evaluation: success rate, steps and tokens on multi-tool tasks, per brain.
 
-Each line of the benchmark (``agent/bench/example_tasks.jsonl``) has a task, the tools that
+Each line of the benchmark (``agent_core/bench/example_tasks.jsonl``) has a task, the tools that
 must be involved, and a way to check the final answer automatically (a number, a substring,
 a regex). Twenty tasks that need at least two tools is the minimum. Run every brain::
 
-    uv run python -m agent.evaluate --bench agent/bench/tasks.jsonl --brains base rlm thinking
+    uv run python -m eval.evaluate --bench agent_core/bench/tasks.jsonl --brains base rlm thinking
 
 and put the resulting table in your report next to the JSON-vs-code-agent comparison.
 """
@@ -39,20 +39,23 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    parser.add_argument("--bench", default="agent/bench/example_tasks.jsonl")
+    parser.add_argument("--bench", default="agent_core/bench/example_tasks.jsonl")
     parser.add_argument("--brains", nargs="+", default=["rlm"])
     parser.add_argument("--max-steps", type=int, default=10)
     parser.add_argument("--out", default="reports/phase4_eval.json")
     args = parser.parse_args()
 
-    from agent_core.react_agent import ReActAgent
+    from agent_core.config import load_env
+    from router import build_orchestrator
+
+    load_env()
 
     tasks = [
         json.loads(line)
         for line in Path(args.bench).read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
-    agent = ReActAgent.from_env()
+    agent = build_orchestrator()
     results = {}
     for brain in args.brains:
         rows = []

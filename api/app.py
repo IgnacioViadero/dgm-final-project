@@ -21,6 +21,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 
+from agent_core.config import load_env
 from api.backends import Backends, env
 from api.schemas import (
     AgentRequest,
@@ -36,6 +37,8 @@ from api.schemas import (
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("arca.api")
+
+load_env()  # so ARCA_* can live in .env instead of the shell
 
 app = FastAPI(
     title="ARCA · Agente con Razonamiento, Conocimiento y Acción",
