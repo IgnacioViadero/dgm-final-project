@@ -68,8 +68,8 @@ JSON con la traza de cada paso en `reports/smoke_{hf,ep}_t{0,1}.json`.
 |---|---|---|---|---|---|---|
 | 1.7B think=0 | especialistas | 8/8 | 2.0 | 4126 | 22.3 | 0.00 |
 | 1.7B think=0 | monolítico | 8/8 | 2.0 | 3784 | 57.1 | 0.00 |
-| 1.7B think=1 | especialistas | _(ver nota)_ | | | | |
-| 1.7B think=1 | monolítico | _(ver nota)_ | | | | |
+| 1.7B think=1 | especialistas | **7/8** | 2.1 | 6161 | 81.3 | 0.00 |
+| 1.7B think=1 | monolítico | 8/8 | 2.0 | 4587 | 40.8 | 0.00 |
 | 27B think=0 | especialistas | 8/8 | 2.0 | 6532 | 2.0 | 0.00 |
 | 27B think=0 | monolítico | 8/8 | 2.0 | 5350 | 2.6 | 0.00 |
 | 27B think=1 | especialistas | 8/8 | 2.0 | 6815 | 4.3 | 0.00 |
@@ -129,14 +129,24 @@ tools devuelvan `{"result", "inputs"}` por separado es lo que lo hace posible.
 - Queda propuesta, **sin aplicar**, una regla de `RULES` para el fallo de arriba, para poder
   medirla con y sin (está al final de este fichero).
 
-**Nota sobre la casilla que falta.** La configuración 1.7B `thinking=1` se relanzó el 20-11
-con el comprobador arreglado, pero con la GPU compartida (64 GB ocupados por otro proceso)
-tardaba 8.6 min por problema, 2.3 h para las 16 corridas. Se dejó para después del banco de
-los 90, que es el que mide. Los números del 19-11 para esa configuración, con el comprobador
-anterior, están en `reports/smoke_hf_thinking.json`: 6/8 especialistas y 7/8 monolítico, al
-doble de tokens que sin thinking. Los 3 fallos analizados arriba son de esa corrida y no son
-artefactos del comprobador (contestar 6.80 cuando se espera 7.48 es un fallo con cualquier
-comprobador).
+**La repetición de 1.7B `thinking=1`, y una advertencia sobre fiarse de una sola corrida.**
+Esa configuración se repitió el 20-11 con el comprobador arreglado
+(`reports/smoke_hf_t1.json`). **El fallo principal se reprodujo exactamente**: `tae_00047`,
+la tool devolvió 7.48 y el modelo volvió a contestar 6.80, el tipo nominal, con la misma
+traza. Los otros dos (`tae_00063` y `cuota_00071`) salieron bien esta vez, así que la corrida
+quedó en 7/8 y 8/8 en lugar de 6/8 y 7/8 del 19-11
+(`reports/smoke_hf_thinking.json`, comprobador anterior).
+
+Eso **no** es el comprobador: 6.80 cuando se espera 7.48 es un fallo con cualquier
+comprobador. Es variación entre corridas, y conviene tenerla presente porque la generación es
+*greedy* (`do_sample=False`) y uno esperaría que fuese determinista. No lo es bit a bit en una
+GPU compartida: el orden de reducción de los kernels cambia, un logit se decide por un
+margen mínimo y la traza se bifurca. Con `thinking=1` hay cientos de tokens de razonamiento
+donde bifurcarse, y por eso la varianza se nota justo en esa configuración. **Conclusión
+metodológica: 8 problemas y una corrida no bastan ni para ordenar dos configuraciones.** Las
+cifras de thinking de este smoke valen para decidir el valor por defecto (el coste sí es
+inequívoco: 6161 tokens frente a 4126, y 81.3 s frente a 22.3), no para afirmar que el
+thinking empeora la exactitud. Para eso está el banco de los 90.
 
 **Un bug del comprobador que sí era del comprobador.** La corrida del 19-11 con el 27B marcó
 como fallo dos respuestas correctas: el modelo escribe "3.930,84 euros" (notación española) y

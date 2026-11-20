@@ -24,8 +24,9 @@ Sent natively, the call comes back in ``tool_calls`` and is re-serialised to the
 
 ``ARCA_ENABLE_THINKING`` switches Qwen's reasoning traces on or off in both backends: in
 ``hf`` through the chat template, in ``endpoint`` through ``chat_template_kwargs``. It is
-OFF by default: on the 1.7B the smoke test of 2026-11-19 scored 8/8 without thinking and
-6/8 with it, at about half the tokens (see EXPERIMENTS.md). Use
+OFF by default: it costs tokens and latency and buys no accuracy. On the 90-problem bench the
+27B scores 90/90 either way, for ~300 tokens more and twice the latency; on the 1.7B the smoke
+scores 8/8 without it and 7/8 with it, at 50% more tokens (see EXPERIMENTS.md). Use
 ``build_llm()`` instead of instantiating a backend, so swapping the brain is one env var
 (that is ablation C of docs/PLAN.md).
 
