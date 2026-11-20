@@ -124,9 +124,17 @@ def plot(runs: list[dict], out: Path, architecture: str = "specialists") -> Path
     axes.set_ylim(0, 105)
     axes.set_title(
         f"Exactitud numérica por tipo · {architecture} con tools vs ARCA fase 1 sin tools\n"
-        "90 problemas de data/rlm_data_test.jsonl · la cifra sobre la barra son aciertos"
+        "90 problemas de data/rlm_data_test.jsonl · la cifra sobre la barra son aciertos",
+        pad=34,
     )
-    axes.legend(ncols=2, fontsize=8, loc="upper left")
+    # Outside the axes: the bars of 'coste total' reach the top and the legend hid them.
+    axes.legend(
+        ncols=min(len(groups), 6),
+        fontsize=8,
+        loc="lower center",
+        bbox_to_anchor=(0.5, 1.0),
+        frameon=False,
+    )
     axes.grid(axis="y", alpha=0.3, linestyle=":")
     axes.set_axisbelow(True)
     figure.tight_layout()
