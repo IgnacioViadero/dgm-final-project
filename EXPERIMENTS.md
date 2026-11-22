@@ -262,6 +262,186 @@ dos cosas juntas dicen que la regla correcta es comparar contra `"result"`.
 
 ---
 
+### 2026-11-20 · Decisión de diseño · Nos quedamos en 2 especialistas, y no hay ablación B
+
+**Qué decidimos.** El sistema se queda con **dos especialistas**, `cuota_tae` y `coste_ratio`,
+y no se parten en cuatro (ni en tres separando `cuota` de `tae`). Con ello **se cae la
+ablación B del plan** ("¿cuántos agentes?", `docs/PLAN.md` §2) y **no se construye el banco
+difícil**: no vamos a medir una variante que hemos decidido no mantener.
+
+**Por qué.** Lo que de verdad tiene que acertar el sistema no es la aritmética —eso ya lo
+hacen las tools, 600/600 contra el dataset— sino **el reparto**: el router tiene que elegir a
+quién manda cada pregunta, y elegir entre 2 es más fácil que elegir entre 4. Cada especialista
+que se añade mete dos clases más en el clasificador y duplica las fronteras donde se puede
+equivocar, a cambio de nada en exactitud numérica: `cuota` y `tae` comparten los mismos datos
+de entrada (principal, tipo, plazo, comisión) y las mismas tools, así que separarlos no
+simplifica ni las reglas ni el prompt, solo reparte lo mismo en más cajas. El riesgo que
+quitamos (un fallo de routing) es mayor que el que asumimos (un prompt de sistema con dos
+tools en vez de una).
+
+**Qué se pierde al decidirlo así, dicho claramente.** Es una decisión de ingeniería, no una
+medición: no tenemos el número que diría cuánto se degrada el routing al pasar de 2 a 4
+agentes, porque hemos decidido no gastar GPU en medir una arquitectura que no vamos a
+entregar. Si en la defensa preguntan "¿y cómo sabéis que 4 es peor?", la respuesta honesta es
+que no lo sabemos medido: sabemos que 4 añade clases al problema de routing sin añadir
+capacidad, y que el presupuesto de experimentos se ha ido a las preguntas que sí deciden algo
+(ablación A, el cerebro y el crítico).
+
+---
+
+### 2026-11-20 · Fase P2 · El banco entero: los 600 problemas con el 1.7B, test y train por separado
+
+**Qué queríamos saber.** Si el 99-100 % de los 90 problemas de test era real o un espejismo de
+tener solo 90 muestras. Con n=90 y un acierto del 99 %, el intervalo de confianza llega hasta
+el 94 %: cabían perfectamente 5 puntos de caída sin que lo viéramos. La pregunta concreta era
+si la exactitud se mantiene en los **600** (90 de test + 510 de train, que nadie había mirado)
+y si en una muestra 6,7 veces mayor aparece alguna diferencia entre las dos arquitecturas.
+
+**Qué hicimos.**
+
+- Primero, comprobar el dataset: `data/rlm_data_test.jsonl` tiene 90 problemas y
+  `data/rlm_data_train.jsonl` 510; **no se solapan** ni por `id`, ni por enunciado, ni por los
+  parámetros del préstamo (`tipo` + `_debug_prestamo`), y no hay duplicados internos. Union =
+  600 ids únicos, 150 de cada tipo (19+131 coste total, 23+127 cuota, 27+123 ratio, 21+129 TAE).
+- `eval/numeric_bench.py` acepta ahora `--dataset` repetido y `--architectures`, y **cada fila
+  guarda de qué fichero viene** (`dataset`, `split`), de modo que test y train se informan por
+  separado sin correr dos veces. Si un `id` apareciera en los dos ficheros, el script se niega
+  a arrancar: el sidecar se indexa por `id`, y un duplicado reanudaría mal.
+- Dos procesos en paralelo en la GPU, uno por arquitectura (`eval/run_bench_600.sh`), con
+  `nohup`, `PYTHONUNBUFFERED=1`, un JSON y un log cada uno y escritura incremental reanudable.
+  Antes de lanzarlos medimos la memoria: la slice es una **MIG 1g.18gb de 16 GB** y una copia
+  del 1.7B ocupa **3,45 GB**, así que caben dos de sobra (durante la corrida: 3984 + 3854 MiB).
+- Los 600 desde cero, aunque ya teníamos los 90, para que todo salga de la misma corrida.
+  1.7B local (`ARCA_LLM_BACKEND=hf`), `thinking=0`, `max_steps=8`. 1200 corridas en total.
+  Ninguna de las dos falló: `exit=0` a la primera, sin usar el reintento (19:24 → 20:43 los
+  especialistas, 19:24 → 21:14 el monolítico).
+
+**Qué pasó.** Aciertos por tipo (`reports/numeric_hf_t0_600_stats.json`):
+
+| arquitectura | split | coste total | cuota | ratio | TAE | **total** |
+|---|---|---|---|---|---|---|
+| especialistas | test (90) | 19/19 | 22/23 | 27/27 | 21/21 | **89/90 (98,9 %)** |
+| monolítico | test (90) | 19/19 | 23/23 | 26/27 | 21/21 | **89/90 (98,9 %)** |
+| especialistas | train (510) | 130/131 | 125/127 | 122/123 | 128/129 | **505/510 (99,0 %)** |
+| monolítico | train (510) | 131/131 | 126/127 | 122/123 | 129/129 | **508/510 (99,6 %)** |
+| especialistas | **600** | 149/150 | 147/150 | 149/150 | 149/150 | **594/600 (99,0 %)** |
+| monolítico | **600** | 150/150 | 149/150 | 148/150 | 150/150 | **597/600 (99,5 %)** |
+
+Intervalos de Wilson al 95 % del acierto total y McNemar exacto entre arquitecturas (mismos
+problemas, pares discordantes):
+
+| split | especialistas | monolítico | McNemar |
+|---|---|---|---|
+| test (90) | 98,89 % [93,97 ; 99,80] | 98,89 % [93,97 ; 99,80] | 1 vs 1 discordantes, p = 1,00 |
+| train (510) | 99,02 % [97,73 ; 99,58] | 99,61 % [98,58 ; 99,89] | 2 vs 5, p = 0,45 |
+| **600** | **99,00 % [97,84 ; 99,54]** | **99,50 % [98,54 ; 99,83]** | 3 vs 6, p = 0,51 |
+
+Coste por problema (media de las 600 corridas de cada arquitectura):
+
+| arquitectura | pasos | tokens | latencia (s) | no_tool | llamada repetida |
+|---|---|---|---|---|---|
+| especialistas | 2,02 | 4155 | 7,9 | 0,000 | 0,013 |
+| monolítico | 2,00 | 3736 | 11,0 | 0,000 | 0,000 |
+
+(Las latencias no son comparables entre sí: los dos procesos se repartían los SM de la misma
+slice y no empezaron ni acabaron a la vez.)
+
+**Los 9 fallos, por mecanismo** (`eval/stats_numeric.py` los clasifica; el detalle con traza
+completa está en el JSON):
+
+1. **Cifra inventada: 6 de 9** (5 de especialistas, 1 de monolítico). La tool devolvió el
+   número correcto, el modelo contestó otro. No es un número de `inputs` ni otro campo de la
+   observación: no aparece en ninguna parte de la traza.
+
+   ```
+   cuota_00043 · cuota_tae · esperado 321.35
+   paso 1  calculate_monthly_payment(principal=10111.33, annual_rate_pct=8.96, months=36)
+           -> {"result": 321.35, "inputs": {...}}
+   paso 2  calculate_monthly_payment(...)   <- la repite, igual
+           -> ERROR: duplicate call: ... use that result, or call final_answer
+   paso 3  final_answer(answer="La cuota mensual es 306.44 euros.")   <- 306.44
+   ```
+
+   Los seis se parecen: 306,44 en vez de 321,35; 226,43 en vez de 256,29; 324,14 en vez de
+   336,88; 1463,87 en vez de 1662,33; 13,44 en vez de 63,06; 424,54 en vez de 125,30. Son
+   números **del orden de magnitud correcto**, lo que sugiere que el modelo rehace la cuenta
+   por su cuenta y manda su resultado en vez de copiar el de la tool. Es exactamente el fallo
+   que la propuesta de `RULES` pendiente ("el resultado es SIEMPRE el campo `result`") quiere
+   atacar, y ahora tiene n=6 en vez de n=1.
+
+2. **Omite un argumento opcional y la tool devuelve `null`: 2 de 9**, los dos del monolítico y
+   los dos de ratio. `loan_metrics` acepta `monthly_income` como opcional, así que no puede
+   rechazar la llamada: contesta `debt_ratio_pct: null` y el modelo se queda sin número.
+
+   ```
+   ratio_endeudamiento_00106 · monolithic · esperado 33.96
+   paso 1  loan_metrics(principal=24847.9, annual_rate_pct=7.94, months=60,
+                        other_monthly_debts=147.82)        <- falta monthly_income
+           -> {"monthly_payment": 503.11, ..., "debt_ratio_pct": null}
+   paso 2  final_answer(answer="Please provide your monthly income to calculate the debt ratio.")
+   ```
+
+   **Este es el fallo que el diseño de los especialistas elimina por construcción**: su
+   `calculate_debt_ratio` tiene `monthly_income` obligatorio, así que una llamada sin ingresos
+   no devuelve `null`, lanza `ValueError` y el modelo lo vuelve a intentar con el dato. 0 de
+   600 en los especialistas, 2 de 600 en el monolítico. Es la ablación F del plan, medida de
+   paso.
+
+3. **Se agota sin contestar: 1 de 9** (`tae_00108`, especialistas). La tool dio 14,91 en el
+   primer paso y el modelo repitió la misma llamada hasta quedarse sin pasos, sin llegar nunca
+   a `final_answer`.
+
+Nótese que **4 de los 6 "cifra inventada" y el único "se agota" vienen precedidos de una
+llamada repetida** (el modelo reemite la misma tool call en vez de leer la observación). La
+repetición aparece en el 1,3 % de las corridas de los especialistas y en ninguna del
+monolítico; cuando aparece, suele acabar mal. No sabemos si es causa o síntoma del mismo
+despiste.
+
+**Qué concluimos.**
+
+1. **La calidad se mantiene: no era un espejismo de n=90.** 99,0 % y 99,5 % sobre 600, con
+   intervalos de Wilson que no bajan del 97,8 %. Los 510 de train, que nadie había visto, dan
+   exactamente lo mismo que los 90 de test (99,0 % vs 98,9 % en especialistas; 99,6 % vs 98,9 %
+   en monolítico). El salto frente a la fase 1 de ARCA (23/90 en el mejor caso) sigue en pie
+   con 6,7 veces más muestras.
+2. **Las dos arquitecturas siguen empatadas, y ahora con potencia para decirlo.** McNemar sobre
+   los 600 da p = 0,51 (3 fallos exclusivos de los especialistas contra 6 del monolítico). Con
+   n=600 ya no es "no sabemos porque son pocos": es que **no hay diferencia en exactitud
+   numérica**, y la ablación A no se puede ganar aquí. Si acaso, la tendencia va **a favor del
+   monolítico** (+0,5 puntos, no significativo), que además gasta menos tokens (3736 vs 4155).
+   El multiagente tendrá que justificarse en los bancos de routing y de preguntas compuestas, o
+   no justificarse.
+3. **El modo de fallo dominante ha cambiado de sitio.** En ARCA era "no emite tool call" (13 de
+   13); aquí es 0 de 1200. Ahora el fallo es **"llama bien, lee mal"**: 6 de 9 son el modelo
+   pisando el resultado de la tool con un número suyo. Eso no lo arregla una tool mejor; lo
+   arregla el **crítico determinista** comparando la respuesta final contra el campo `result`
+   de la última observación. Los 6 casos lo cazaría: ninguno de los números inventados aparece
+   en la traza. Es la ablación E, y este experimento le pone número al techo que puede subir:
+   de 99,0 % a 99,8 % en los especialistas.
+4. **Un argumento opcional sigue siendo un fallo esperando a pasar.** Los 2 fallos de `null` son
+   el 100 % de la diferencia entre las dos arquitecturas en ratio, y son la consecuencia directa
+   de que `loan_metrics` deje `monthly_income` por defecto. Confirma la regla del proyecto:
+   argumento obligatorio siempre que un default silencioso dé una respuesta incorrecta.
+5. **La corrida no es bit-reproducible, y hay que decirlo.** Con `do_sample=False` y la misma
+   configuración, de las 180 corridas de los 90 de test que repiten las del 20-11, solo **146
+   dan la respuesta literalmente idéntica** y **3 cambian de veredicto**: `cuota_00043`
+   (especialistas) pasa de acertar a fallar, `ratio_endeudamiento_00106` (monolítico) de
+   acertar a fallar, y `cuota_00106` (monolítico) — el famoso fallo del "124.32" de la entrada
+   anterior — **ahora acierta**. Greedy no garantiza determinismo bit a bit en GPU (el orden de
+   reducción de los kernels cambia con la ocupación, y aquí había dos procesos compartiendo la
+   slice). Consecuencia práctica: **el 90/90 de la entrada del 20-11 y este 89/90 son la misma
+   medida**, y ninguna anécdota construida sobre un solo caso (incluida la del 124.32) es
+   reproducible. Las conclusiones hay que sacarlas de los 600, no de un problema.
+
+**Dónde está todo.** `reports/numeric_hf_t0_600_specialists.json` y
+`reports/numeric_hf_t0_600_monolithic.json` (una por proceso, con sus filas y su
+`by_split_counts`), sus sidecars `.rows.jsonl`, el análisis en
+`reports/numeric_hf_t0_600_stats.json` y la figura en `reports/numeric_bench_600.png` (panel de
+arriba: los 90 de test con la fase 1 de ARCA en gris; panel de abajo: los 600). Los logs, en
+`reports/logs/numeric_hf_t0_600_*.log`.
+
+---
+
 ## Propuestas pendientes de medir
 
 ### Regla de `RULES` para "contesta con un número de `inputs` o inventado en vez de con `result`"

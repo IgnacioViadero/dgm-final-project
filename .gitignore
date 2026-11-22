@@ -42,6 +42,8 @@ report/figs/*.png
 # Figura del banco numérico de los 90, al lado de la fase 1 de ARCA
 !reports/numeric_bench.png
 !reports/numeric_bench_monolithic.png
+# Figura del banco de los 600 (90 de test + 510 de train), dos paneles
+!reports/numeric_bench_600.png
 
 # Logs y salidas de ejecución
 *.log

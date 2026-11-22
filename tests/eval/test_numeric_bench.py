@@ -164,3 +164,118 @@ def test_row_key_separates_the_two_architectures():
     assert numeric_bench.row_key("cuota_00001", "cuota_tae") != numeric_bench.row_key(
         "cuota_00001", "monolithic"
     )
+
+
+# -- several datasets in one run ------------------------------------------------------
+
+TEST_SPLIT = numeric_bench.REPO_ROOT / "data" / "rlm_data_test.jsonl"
+TRAIN_SPLIT = numeric_bench.REPO_ROOT / "data" / "rlm_data_train.jsonl"
+
+
+def test_several_datasets_are_concatenated_in_the_order_given():
+    both = numeric_bench.load_all_problems([TEST_SPLIT, TRAIN_SPLIT])
+    assert len(both) == 600
+    assert both[:90] == numeric_bench.load_all_problems(TEST_SPLIT)
+    assert {p["split"] for p in both} == {"test", "train"}
+    assert sum(p["split"] == "test" for p in both) == 90
+    assert sum(p["split"] == "train" for p in both) == 510
+
+
+def test_every_problem_says_which_file_it_came_from():
+    problems = numeric_bench.load_all_problems([TRAIN_SPLIT])
+    assert {p["dataset"] for p in problems} == {str(TRAIN_SPLIT)}
+    assert {p["split"] for p in problems} == {"train"}
+
+
+def test_limit_applies_to_each_dataset():
+    assert len(numeric_bench.load_all_problems([TEST_SPLIT, TRAIN_SPLIT], limit=4)) == 8
+
+
+def test_an_id_in_two_datasets_is_an_error_because_the_sidecar_keys_on_it(tmp_path):
+    # The real files do not collide, but a repeated --dataset would resume wrongly.
+    with pytest.raises(ValueError, match="unique across the datasets"):
+        numeric_bench.load_all_problems([TEST_SPLIT, TEST_SPLIT])
+
+
+def test_the_rows_carry_the_split_so_test_and_train_can_be_reported_apart(tmp_path, fake_llm):
+    problems = [p for p in numeric_bench.load_all_problems(TRAIN_SPLIT) if p["tipo"] == "cuota"][:1]
+    row = problems[0]
+    loan = row["_debug_prestamo"]
+    replies = []
+    for _ in range(2):
+        replies.append(
+            call(
+                "calculate_monthly_payment",
+                principal=loan["principal"],
+                annual_rate_pct=loan["tipo_nominal"],
+                months=loan["meses"],
+            )
+        )
+        replies.append(call("final_answer", answer=row["answer"]))
+    rows = numeric_bench.run_all_incremental(
+        problems, fake_llm(replies), tmp_path / "rows.jsonl", max_steps=6
+    )
+    assert {r["split"] for r in rows} == {"train"}
+    assert {r["dataset"] for r in rows} == {str(TRAIN_SPLIT)}
+
+
+def test_by_split_counts_separates_the_splits_and_keeps_the_total():
+    rows = [
+        {**make_row("cuota", "cuota_tae", True), "split": "test"},
+        {**make_row("cuota", "cuota_tae", False), "split": "train"},
+        {**make_row("cuota", "monolithic", True), "split": "test"},
+        {**make_row("cuota", "monolithic", True), "split": "train"},
+    ]
+    counts = numeric_bench.by_split_counts(rows)
+    assert list(counts) == ["test", "train", "all"]
+    assert counts["test"]["specialists"]["total"] == {"hits": 1, "n": 1}
+    assert counts["train"]["specialists"]["total"] == {"hits": 0, "n": 1}
+    assert counts["all"]["specialists"]["total"] == {"hits": 1, "n": 2}
+    assert counts["all"]["monolithic"]["total"] == {"hits": 2, "n": 2}
+
+
+def test_split_name_is_the_short_name_of_the_file():
+    assert numeric_bench.split_name(TEST_SPLIT) == "test"
+    assert numeric_bench.split_name(TRAIN_SPLIT) == "train"
+
+
+# -- one architecture per process -----------------------------------------------------
+
+
+def test_only_the_specialists_run_when_asked_for(tmp_path, fake_llm):
+    problems = [p for p in numeric_bench.load_all_problems(TEST_SPLIT) if p["tipo"] == "cuota"][:1]
+    row = problems[0]
+    loan = row["_debug_prestamo"]
+    llm = fake_llm(
+        [
+            call(
+                "calculate_monthly_payment",
+                principal=loan["principal"],
+                annual_rate_pct=loan["tipo_nominal"],
+                months=loan["meses"],
+            ),
+            call("final_answer", answer=row["answer"]),
+        ]
+    )
+    rows = numeric_bench.run_all_incremental(
+        problems, llm, tmp_path / "rows.jsonl", max_steps=6, architectures=("specialists",)
+    )
+    assert [r["agent"] for r in rows] == ["cuota_tae"]
+    assert llm.replies == []
+
+
+def test_only_the_baseline_runs_when_asked_for(tmp_path, fake_llm):
+    problems = [p for p in numeric_bench.load_all_problems(TEST_SPLIT) if p["tipo"] == "cuota"][:1]
+    row = problems[0]
+    llm = fake_llm([call("final_answer", answer=row["answer"])])
+    rows = numeric_bench.run_all_incremental(
+        problems, llm, tmp_path / "rows.jsonl", max_steps=6, architectures=("monolithic",)
+    )
+    assert [r["agent"] for r in rows] == ["monolithic"]
+
+
+def test_an_unknown_architecture_is_rejected(tmp_path, fake_llm):
+    with pytest.raises(ValueError, match="unknown architectures"):
+        numeric_bench.run_all_incremental(
+            [], fake_llm([]), tmp_path / "rows.jsonl", architectures=("router",)
+        )
