@@ -27,6 +27,10 @@ rag = [                      # solo si mantenéis el agente legal
     "sentence-transformers>=5.0",
     "rank-bm25>=0.2.2",
     "chromadb>=1.0",
+    "langchain-text-splitters>=0.3",
+]
+viz = [                      # figuras del informe (eval/plot_numeric.py)
+    "matplotlib>=3.9",
 ]
 
 [dependency-groups]

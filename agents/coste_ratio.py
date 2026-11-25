@@ -6,10 +6,10 @@ picks the tool, fills in the arguments from the user's question and reads the re
 
 from __future__ import annotations
 
-from agent_core.llm import LLM
+from agent_core.llm import Brain
 from agent_core.react_agent import ReActAgent
 from tool_use.registry import ToolRegistry
-from tool_use.tools import calculate_debt_ratio, calculate_total_cost
+from tool_use.tools_coste_ratio import calculate_debt_ratio, calculate_total_cost
 
 NAME = "coste_ratio"
 
@@ -23,9 +23,10 @@ RULES = """Additional rules:
     -> calculate_total_cost.
   * debt ratio, or what percentage of the income goes to the instalment
     -> calculate_debt_ratio.
-- calculate_total_cost returns total_cost = interest plus fees (everything paid minus the
-  capital received). If the user asks how much they will repay in total, add the principal
-  to total_cost.
+- Every tool answers with {"result": the number you asked for, "inputs": the figures it
+  used}. Read "result"; "inputs" is only there so the answer can be checked.
+- calculate_total_cost returns the interest plus the fees (everything paid minus the capital
+  received). If the user asks how much they will repay in total, add the principal to it.
 - upfront_fee is required for the total cost: use 0 if the user mentions no fee.
 - monthly_income is required for the debt ratio. If the user did not give it, do not guess:
   call final_answer asking for it. other_monthly_debts is 0 if the user mentions none.
@@ -35,7 +36,7 @@ RULES = """Additional rules:
 """
 
 
-def build(llm: LLM) -> ReActAgent:
+def build(llm: Brain) -> ReActAgent:
     """The cost-and-ratio specialist, sharing the given model with the other agents."""
     registry = ToolRegistry().register(calculate_total_cost, calculate_debt_ratio)
     return ReActAgent(NAME, llm, registry, RULES)

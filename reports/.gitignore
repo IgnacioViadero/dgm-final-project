@@ -1,0 +1,4 @@
+# Estado de reanudacion del benchmark: se reescribe en cada corrida y queda
+# redundante en cuanto el JSON final (que lleva las mismas filas con su traza)
+# se ha escrito. Lo que se versiona es el JSON y el PNG.
+*.rows.jsonl

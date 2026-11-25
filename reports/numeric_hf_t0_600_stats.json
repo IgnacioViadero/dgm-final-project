@@ -1,0 +1,436 @@
+{
+  "n_rows": 1200,
+  "counts": {
+    "test": {
+      "specialists": {
+        "coste_total": {
+          "hits": 19,
+          "n": 19
+        },
+        "cuota": {
+          "hits": 22,
+          "n": 23
+        },
+        "ratio_endeudamiento": {
+          "hits": 27,
+          "n": 27
+        },
+        "tae": {
+          "hits": 21,
+          "n": 21
+        },
+        "total": {
+          "hits": 89,
+          "n": 90
+        }
+      },
+      "monolithic": {
+        "coste_total": {
+          "hits": 19,
+          "n": 19
+        },
+        "cuota": {
+          "hits": 23,
+          "n": 23
+        },
+        "ratio_endeudamiento": {
+          "hits": 26,
+          "n": 27
+        },
+        "tae": {
+          "hits": 21,
+          "n": 21
+        },
+        "total": {
+          "hits": 89,
+          "n": 90
+        }
+      }
+    },
+    "train": {
+      "specialists": {
+        "coste_total": {
+          "hits": 130,
+          "n": 131
+        },
+        "cuota": {
+          "hits": 125,
+          "n": 127
+        },
+        "ratio_endeudamiento": {
+          "hits": 122,
+          "n": 123
+        },
+        "tae": {
+          "hits": 128,
+          "n": 129
+        },
+        "total": {
+          "hits": 505,
+          "n": 510
+        }
+      },
+      "monolithic": {
+        "coste_total": {
+          "hits": 131,
+          "n": 131
+        },
+        "cuota": {
+          "hits": 126,
+          "n": 127
+        },
+        "ratio_endeudamiento": {
+          "hits": 122,
+          "n": 123
+        },
+        "tae": {
+          "hits": 129,
+          "n": 129
+        },
+        "total": {
+          "hits": 508,
+          "n": 510
+        }
+      }
+    },
+    "all": {
+      "specialists": {
+        "coste_total": {
+          "hits": 149,
+          "n": 150
+        },
+        "cuota": {
+          "hits": 147,
+          "n": 150
+        },
+        "ratio_endeudamiento": {
+          "hits": 149,
+          "n": 150
+        },
+        "tae": {
+          "hits": 149,
+          "n": 150
+        },
+        "total": {
+          "hits": 594,
+          "n": 600
+        }
+      },
+      "monolithic": {
+        "coste_total": {
+          "hits": 150,
+          "n": 150
+        },
+        "cuota": {
+          "hits": 149,
+          "n": 150
+        },
+        "ratio_endeudamiento": {
+          "hits": 148,
+          "n": 150
+        },
+        "tae": {
+          "hits": 150,
+          "n": 150
+        },
+        "total": {
+          "hits": 597,
+          "n": 600
+        }
+      }
+    }
+  },
+  "wilson": {
+    "test": {
+      "specialists": {
+        "hits": 89,
+        "n": 90,
+        "point": 0.9888888888888889,
+        "low": 0.9397159168824657,
+        "high": 0.9980359158990818
+      },
+      "monolithic": {
+        "hits": 89,
+        "n": 90,
+        "point": 0.9888888888888889,
+        "low": 0.9397159168824657,
+        "high": 0.9980359158990818
+      }
+    },
+    "train": {
+      "specialists": {
+        "hits": 505,
+        "n": 510,
+        "point": 0.9901960784313726,
+        "low": 0.9772574980221799,
+        "high": 0.9958052850929441
+      },
+      "monolithic": {
+        "hits": 508,
+        "n": 510,
+        "point": 0.996078431372549,
+        "low": 0.9858156316592576,
+        "high": 0.9989239048532478
+      }
+    },
+    "all": {
+      "specialists": {
+        "hits": 594,
+        "n": 600,
+        "point": 0.99,
+        "low": 0.9783564551842772,
+        "high": 0.9954090778222962
+      },
+      "monolithic": {
+        "hits": 597,
+        "n": 600,
+        "point": 0.995,
+        "low": 0.9854037936547144,
+        "high": 0.998298122341722
+      }
+    }
+  },
+  "mcnemar": {
+    "test": {
+      "split": "test",
+      "n_paired": 90,
+      "both_correct": 88,
+      "only_specialists": 1,
+      "only_monolithic": 1,
+      "neither": 0,
+      "discordant": 2,
+      "p_value": 1.0,
+      "test": "McNemar exacto (binomial de dos colas sobre los pares discordantes)"
+    },
+    "train": {
+      "split": "train",
+      "n_paired": 510,
+      "both_correct": 503,
+      "only_specialists": 2,
+      "only_monolithic": 5,
+      "neither": 0,
+      "discordant": 7,
+      "p_value": 0.453125,
+      "test": "McNemar exacto (binomial de dos colas sobre los pares discordantes)"
+    },
+    "all": {
+      "split": "all",
+      "n_paired": 600,
+      "both_correct": 591,
+      "only_specialists": 3,
+      "only_monolithic": 6,
+      "neither": 0,
+      "discordant": 9,
+      "p_value": 0.5078125,
+      "test": "McNemar exacto (binomial de dos colas sobre los pares discordantes)"
+    }
+  },
+  "failures": {
+    "specialists": {
+      "n_failures": 6,
+      "groups": [
+        {
+          "mechanism": "cifra inventada (no esta en la traza)",
+          "n": 5,
+          "ids": [
+            "cuota_00043",
+            "cuota_00119",
+            "ratio_endeudamiento_00131",
+            "cuota_00028",
+            "coste_total_00094"
+          ],
+          "splits": [
+            "test",
+            "train"
+          ],
+          "types": [
+            "coste_total",
+            "cuota",
+            "ratio_endeudamiento"
+          ],
+          "example": {
+            "id": "cuota_00043",
+            "tipo": "cuota",
+            "split": "test",
+            "expected": "321.35",
+            "answer": "La cuota mensual es 306.44 euros.",
+            "n_steps": 3,
+            "trace": [
+              {
+                "tool": "calculate_monthly_payment",
+                "arguments": {
+                  "principal": 10111.33,
+                  "annual_rate_pct": 8.96,
+                  "months": 36
+                },
+                "observation": "{\"result\": 321.35, \"inputs\": {\"principal\": 10111.33, \"annual_rate_pct\": 8.96, \"months\": 36}} Only your first tool call was executed; wait for results before the next."
+              },
+              {
+                "tool": "calculate_monthly_payment",
+                "arguments": {
+                  "principal": 10111.33,
+                  "annual_rate_pct": 8.96,
+                  "months": 36
+                },
+                "observation": "ERROR: duplicate call: you already called calculate_monthly_payment with these arguments and got its result. Use that result, or call final_answer. Only your first tool call was executed; wait for results before the next."
+              },
+              {
+                "tool": "final_answer",
+                "arguments": {
+                  "answer": "La cuota mensual es 306.44 euros."
+                },
+                "observation": "La cuota mensual es 306.44 euros."
+              }
+            ],
+            "error": null
+          }
+        },
+        {
+          "mechanism": "se agota sin contestar (sin final_answer)",
+          "n": 1,
+          "ids": [
+            "tae_00108"
+          ],
+          "splits": [
+            "train"
+          ],
+          "types": [
+            "tae"
+          ],
+          "example": {
+            "id": "tae_00108",
+            "tipo": "tae",
+            "split": "train",
+            "expected": "14.91",
+            "answer": "",
+            "n_steps": 3,
+            "trace": [
+              {
+                "tool": "calculate_apr",
+                "arguments": {
+                  "principal": 29662.47,
+                  "annual_rate_pct": 13.61,
+                  "months": 36,
+                  "upfront_fee": 154.93
+                },
+                "observation": "{\"result\": 14.91, \"inputs\": {\"principal\": 29662.47, \"annual_rate_pct\": 13.61, \"months\": 36, \"upfront_fee\": 154.93, \"monthly_payment\": 1008.18}} Only your first tool call was executed; wait for results before the next."
+              },
+              {
+                "tool": "calculate_apr",
+                "arguments": {
+                  "principal": 29662.47,
+                  "annual_rate_pct": 13.61,
+                  "months": 36,
+                  "upfront_fee": 154.93
+                },
+                "observation": "ERROR: duplicate call: you already called calculate_apr with these arguments and got its result. Use that result, or call final_answer. Only your first tool call was executed; wait for results before the next."
+              },
+              {
+                "tool": "calculate_apr",
+                "arguments": {
+                  "principal": 29662.47,
+                  "annual_rate_pct": 13.61,
+                  "months": 36,
+                  "upfront_fee": 154.93
+                },
+                "observation": "ERROR: duplicate call: you already called calculate_apr with these arguments and got its result. Use that result, or call final_answer. Only your first tool call was executed; wait for results before the next."
+              }
+            ],
+            "error": null
+          }
+        }
+      ]
+    },
+    "monolithic": {
+      "n_failures": 3,
+      "groups": [
+        {
+          "mechanism": "omite un argumento opcional y la tool devuelve null",
+          "n": 2,
+          "ids": [
+            "ratio_endeudamiento_00106",
+            "ratio_endeudamiento_00066"
+          ],
+          "splits": [
+            "test",
+            "train"
+          ],
+          "types": [
+            "ratio_endeudamiento"
+          ],
+          "example": {
+            "id": "ratio_endeudamiento_00106",
+            "tipo": "ratio_endeudamiento",
+            "split": "test",
+            "expected": "33.96",
+            "answer": "Please provide your monthly income to calculate the debt ratio.",
+            "n_steps": 2,
+            "trace": [
+              {
+                "tool": "loan_metrics",
+                "arguments": {
+                  "principal": 24847.9,
+                  "annual_rate_pct": 7.94,
+                  "months": 60,
+                  "other_monthly_debts": 147.82
+                },
+                "observation": "{\"monthly_payment\": 503.11, \"total_cost\": 5338.7, \"apr_pct\": 8.24, \"debt_ratio_pct\": null}"
+              },
+              {
+                "tool": "final_answer",
+                "arguments": {
+                  "answer": "Please provide your monthly income to calculate the debt ratio."
+                },
+                "observation": "Please provide your monthly income to calculate the debt ratio."
+              }
+            ],
+            "error": null
+          }
+        },
+        {
+          "mechanism": "cifra inventada (no esta en la traza)",
+          "n": 1,
+          "ids": [
+            "cuota_00114"
+          ],
+          "splits": [
+            "train"
+          ],
+          "types": [
+            "cuota"
+          ],
+          "example": {
+            "id": "cuota_00114",
+            "tipo": "cuota",
+            "split": "train",
+            "expected": "125.30",
+            "answer": "424.54",
+            "n_steps": 2,
+            "trace": [
+              {
+                "tool": "loan_metrics",
+                "arguments": {
+                  "principal": 5326.73,
+                  "annual_rate_pct": 14.49,
+                  "months": 60,
+                  "upfront_fee": 9.07,
+                  "monthly_income": 1669.39,
+                  "other_monthly_debts": 279.04
+                },
+                "observation": "{\"monthly_payment\": 125.3, \"total_cost\": 2200.34, \"apr_pct\": 15.58, \"debt_ratio_pct\": 24.22} Only your first tool call was executed; wait for results before the next."
+              },
+              {
+                "tool": "final_answer",
+                "arguments": {
+                  "answer": "424.54"
+                },
+                "observation": "424.54"
+              }
+            ],
+            "error": null
+          }
+        }
+      ]
+    }
+  }
+}

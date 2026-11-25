@@ -9,6 +9,8 @@ rules they receive; the model (``LLM``) is shared and the loop is the same.
 * Loop guard: the second identical call is not executed, the third ends the run as failed.
 * Prose after using a tool is accepted as the final answer; before any tool, one reminder.
 * Tools with ``requires_confirmation`` go through ``self.confirm``.
+* The tool definitions are handed to the brain on every call. The local backend ignores
+  them (it reads them from the system prompt); the endpoint needs them to call natively.
 """
 
 from __future__ import annotations
@@ -124,6 +126,20 @@ class ReActAgent:
                 error=f"timeout: {call.name} gave {exc}. Try other arguments or another tool.",
             )
 
+    def _tokens_of_last_call(self, messages: list[dict], raw: str) -> int:
+        """Tokens charged for one generation: the real figure when the brain reports it.
+
+        ``EndpointLLM`` fills ``last_usage`` from the service's ``usage`` field and the
+        local backend from its own tokenizer, so this is exact for both. Brains that do not
+        track usage (the ``FakeLLM`` of the tests, or a future one) fall back to counting
+        the prompt and the reply with ``count_tokens``.
+        """
+        usage = getattr(self.llm, "last_usage", None)
+        if isinstance(usage, dict) and isinstance(usage.get("total_tokens"), int):
+            return usage["total_tokens"]
+        prompt = "".join(str(m.get("content") or "") for m in messages)
+        return self.llm.count_tokens(prompt) + self.llm.count_tokens(raw)
+
     def run(self, task: str, max_steps: int = 6) -> AgentResponse:
         """The ReAct loop: think, act, observe, until ``final_answer`` or no steps left."""
         memory = ConversationMemory(
@@ -153,9 +169,8 @@ class ReActAgent:
 
         for step_number in range(1, max_steps + 1):
             messages = memory.render()
-            raw = self.llm.generate(messages)
-            tokens += self.llm.count_tokens("".join(m["content"] for m in messages))
-            tokens += self.llm.count_tokens(raw)
+            raw = self.llm.generate(messages, tools=self.registry.definitions())
+            tokens += self._tokens_of_last_call(messages, raw)
             raw = clean_model_output(raw)
             parsed = parse_tool_calls(raw)
             thinking = thought(parsed)

@@ -11,7 +11,7 @@ places to implement are:
 * phase 1: ``rlm.inference.ReasoningModel``
 * phase 2: ``tool_use.executor.ToolLoop``
 * phase 3: ``rag.generate.RagPipeline``
-* phase 4: ``agent.react_agent.ReActAgent``
+* phase 4: ``router.build_orchestrator`` (orchestrator + specialists)
 """
 
 from __future__ import annotations
@@ -80,9 +80,9 @@ class Backends:
 
     def agent(self):
         def factory():
-            from agent.react_agent import ReActAgent
+            from router import build_orchestrator
 
-            return ReActAgent.from_env()
+            return build_orchestrator()
 
         return self._load("agent", factory)
 
