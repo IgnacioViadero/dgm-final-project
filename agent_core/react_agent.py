@@ -44,13 +44,13 @@ NUDGE = (
 
 
 @tool
-def final_answer(answer: str) -> str:
+def final_answer(answer: str | float | int) -> str:
     """Return the final answer to the user and stop the loop.
 
     Args:
         answer: The complete answer to the task.
     """
-    return answer
+    return str(answer)
 
 
 @dataclass

@@ -48,7 +48,11 @@ RULES = """Additional rules:
 - annual_rate_pct is a percentage: 8.5 means 8.5%, not 0.085. If the user gives no numeric
   rate and the rate does not depend on the Euribor, say so in final_answer instead of
   inventing one.
-- Finish by calling final_answer with the number the user asked for, rounded to 2 decimals.
+- Finish by calling final_answer with the number the user asked for, rounded to 2 decimals,
+  written as text.
+- Copy the "result" EXACTLY, keeping its decimal point: 10.34 stays 10.34, never 1034 or
+  1,034. The dot is the decimal separator, not a thousands separator. Do not add currency
+  or percent symbols.
 """
 
 

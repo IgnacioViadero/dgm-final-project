@@ -15,6 +15,8 @@ dependencies = [
     "requests>=2.32",
     "rich>=13.9",
     "python-dotenv>=1.1",
+    "pandas>=3.0",
+    "langchain-text-splitters>=1.1.3",
 ]
 
 [project.optional-dependencies]
@@ -23,11 +25,10 @@ llm = [
     "transformers>=5.0,<6",
     "accelerate>=1.5",
 ]
-rag = [                      # solo si mantenéis el agente legal
+rag = [                     
     "sentence-transformers>=5.0",
     "rank-bm25>=0.2.2",
-    "chromadb>=1.0",
-    "langchain-text-splitters>=0.3",
+    "pypdf>=5.0",
 ]
 viz = [                      # figuras del informe (eval/plot_numeric.py)
     "matplotlib>=3.9",
@@ -35,6 +36,7 @@ viz = [                      # figuras del informe (eval/plot_numeric.py)
 
 [dependency-groups]
 dev = [
+    "pandas>=3.1.1",
     "pytest>=8.3",
     "ruff>=0.11",
 ]
@@ -47,7 +49,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["api", "agent_core", "agents", "router", "tool_use", "eval"]
+packages = ["api", "agent_core", "agents", "router", "tool_use", "eval", "rag"]
 
 [tool.uv]
 default-groups = ["dev"]

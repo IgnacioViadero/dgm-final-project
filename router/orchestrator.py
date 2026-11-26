@@ -1,35 +1,52 @@
-"""Entry point of the multi-agent orchestrator (phase P3 of ``docs/PLAN.md``).
-
-The orchestrator itself is not implemented yet. ``build_orchestrator`` is already the
-factory everything else goes through, and it raises ``NotImplementedError`` so that the
-API starts normally and ``/health`` reports the agent phase as ``pending`` instead of
-crashing on import.
-
-When the orchestrator lands, this factory must return an object with::
-
-    run(task: str, max_steps: int = 6, brain: str | None = None) -> api.schemas.AgentResponse
-
-which is exactly what ``/agent`` calls.
-"""
-
 from __future__ import annotations
 
-from typing import Any
+import logging
 
-PENDING_MESSAGE = (
-    "The orchestrator (router/) is not implemented yet: no RouteDecision, no specialists "
-    "dispatch and no critic. See phase P3 in docs/PLAN.md."
-)
+from agent_core.llm import LLM, build_llm
+from agents import coste_ratio, cuota_tae, rag
+from api.schemas import AgentResponse, AgentStep
+from router.router import route
+
+log = logging.getLogger("dgm-project.orchestrator")
 
 
-def build_orchestrator(llm: Any | None = None) -> Any:
-    """Build the orchestrator the API and the evaluation share.
+class Orchestrator:
+    """Routes a task to one specialist and returns its AgentResponse."""
 
-    Args:
-        llm: The shared brain. When omitted, the backend configured by
-            ``ARCA_LLM_BACKEND`` will be built by the orchestrator itself.
+    def __init__(self, llm: LLM):
+        self.llm = llm
+        self.agents = {
+            cuota_tae.NAME: cuota_tae.build(llm),
+            coste_ratio.NAME: coste_ratio.build(llm),
+            rag.NAME: rag.build(llm)
+        }
+        self.last_decision = None
 
-    Raises:
-        NotImplementedError: Always, until phase P3 is done.
-    """
-    raise NotImplementedError(PENDING_MESSAGE)
+    def run(self, task: str, max_steps: int = 6, brain: str | None = None) -> AgentResponse:
+        try:
+            decision = route(self.llm, task)
+            self.last_decision = decision
+        except Exception as exc:  # the router must never take the API down
+            log.exception("router failed")
+            return AgentResponse(
+                final_answer="", steps=[], n_steps=0, succeeded=False,
+                model=f"orchestrator:{self.llm.model_id}",
+                tokens_used=0,
+            )
+        log.info("routed to %s (%s)", decision.agent, decision.reason)
+
+        response = self.agents[decision.agent].run(task, max_steps=max_steps)
+
+        route_step = AgentStep(
+            thought=f"Router -> {decision.agent}. {decision.reason}".strip(),
+        )
+        response.steps = [route_step, *response.steps]
+        response.n_steps = len(response.steps)
+        response.model = f"orchestrator>{response.model}"
+        return response
+
+
+def build_orchestrator(llm=None) -> Orchestrator:
+    if llm is None:
+        llm = build_llm()  # your real factory, driven by ARCA_LLM_BACKEND
+    return Orchestrator(llm)

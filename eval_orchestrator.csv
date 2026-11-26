@@ -1,0 +1,12 @@
+id,tipo,expected_agent,routed_agent,route_ok,answer_ok,final_answer,expected_answer,n_steps,tokens,succeeded,error,seconds
+cuota_000xº71,cuota,cuota_tae,cuota_tae,True,True,174.09,174.09,3,4904,True,,112.53
+coste_total_00148,coste_total,coste_ratio,coste_ratio,True,True,3930.84,3930.84,3,3918,True,,119.2
+ratio_endeudamiento_00086,ratio_endeudamiento,coste_ratio,coste_ratio,True,True,45.88,45.88,3,3856,True,,10.19
+coste_total_00073,coste_total,coste_ratio,coste_ratio,True,True,2803.54,2803.54,3,3757,True,,5.62
+tae_00047,tae,cuota_tae,cuota_tae,True,True,7.48,7.48,3,4888,True,,23.2
+rag_00001,rag,rag,rag,True,True,"14
+
+Fuentes: ley_16_2011_credito_consumo.pdf, directiva_ue_2023_2225_credito_consumo.pdf",14,3,2330,True,,84.19
+rag_00002,rag,rag,rag,True,False,"El único tipo de gasto que puede reclamar el prestamista como compensación es el de devolución del préstamo.
+
+Fuentes: directiva_ue_2023_2225_credito_consumo.pdf, ley_16_2011_credito_consumo.pdf",gastos no reembolsables abonados a la Administración Pública,3,2594,True,,101.3
